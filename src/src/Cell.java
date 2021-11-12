@@ -1,8 +1,10 @@
 public class Cell {
 
-    private int value;
+    public int value;
+    public boolean fixed;
 
-    public Cell(int value){
+    public Cell(int value, boolean fixed){
+        this.fixed = fixed;
         this.value = value;
     }
 
