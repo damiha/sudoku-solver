@@ -6,6 +6,7 @@ public class SolverState {
 
     /* preferences */
     private boolean mvrEnabled;
+    private boolean lcvEnabled;
 
     /* stats */
     private int numberOfBacktracks;
@@ -37,6 +38,10 @@ public class SolverState {
         mvrEnabled = value;
     }
 
+    public void setLcv(boolean value){
+        lcvEnabled = value;
+    }
+
     public void incBacktracks(){
         numberOfBacktracks++;
     }
@@ -47,6 +52,10 @@ public class SolverState {
 
     public boolean isMvrEnabled(){
         return mvrEnabled;
+    }
+
+    public boolean isLcvEnabled(){
+        return lcvEnabled;
     }
 
     public void startTimer(){
@@ -94,5 +103,6 @@ public class SolverState {
 
     public void printPreferences(){
         System.out.println(Main.indentation + "MVR: " + isMvrEnabled());
+        System.out.println(Main.indentation + "LCR: " + isLcvEnabled());
     }
 }

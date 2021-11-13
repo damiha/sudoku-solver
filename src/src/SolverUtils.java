@@ -1,8 +1,17 @@
-import java.util.HashSet;
-import java.util.PriorityQueue;
-import java.util.Set;
+import java.util.*;
 
 public class SolverUtils {
+
+    private Comparator<Assignment> assignmentComparator;
+
+    public SolverUtils(){
+        assignmentComparator = new Comparator<Assignment>() {
+            @Override
+            public int compare(Assignment o1, Assignment o2) {
+                return Integer.compare(o1.numberOfCollisions, o2.numberOfCollisions);
+            }
+        };
+    }
 
 
     public boolean isNumeric(String sudokuString){
@@ -91,6 +100,47 @@ public class SolverUtils {
             }
             neighbour.updateMVRGroup();
         }
+    }
+
+    public int getNumCollisionsWithNeighbours(Cell[][] board, Cell cell, int value){
+        int y = cell.y;
+        int x = cell.x;
+
+        int numCollisions = 0;
+
+        // look across row
+        for(int i = 1; i < 9; i++){
+            numCollisions += collidesWith(board[y][(x + i) % 9], value);
+        }
+
+        // look across column
+        for(int i = 1; i < 9; i++){
+            numCollisions += collidesWith(board[(y + i) % 9][x], value);
+        }
+
+        // look across 3x3 square
+        int xSquare = (x / 3) * 3;
+        int ySquare = (y / 3) * 3;
+
+        for(int i = 0; i < 3; i++){
+            for(int j = 0; j < 3; j++){
+
+                Cell neighbour = board[ySquare + i][xSquare + j];
+
+                if(neighbour != cell){
+                    numCollisions += collidesWith(neighbour, value);
+                }
+            }
+        }
+        return numCollisions;
+    }
+
+    private int collidesWith(Cell cell, int value){
+        return (cell.isEmpty() && cell.domain[value] == 0) ? 1 : 0;
+    }
+
+    public void sortAssignments(List<Assignment> assignments){
+        assignments.sort(assignmentComparator);
     }
 
     public String getSudokuString(Cell[][] board){

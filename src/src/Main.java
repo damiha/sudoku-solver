@@ -67,6 +67,12 @@ public class Main {
             case "-MVR":
                 solver.getState().setMVR(false);
                 break;
+            case "+LCV":
+                solver.getState().setLcv(true);
+                break;
+            case "-LCV":
+                solver.getState().setLcv(false);
+                break;
             default:
                 System.out.println(indentation + "invalid command. Type 'help' for additional information.");
         }

@@ -2,13 +2,13 @@ import java.util.*;
 
 public class SudokuSolver {
 
-    private Cell[][] board;
-    private Cell[][] solution;
-    private MVRHeap mvrHeap;
+    private final Cell[][] board;
+    private final Cell[][] solution;
+    private final MVRHeap mvrHeap;
 
-    private BoardUtils boardUtils;
-    private SolverUtils solverUtils;
-    private SolverState solverState;
+    private final BoardUtils boardUtils;
+    private final SolverUtils solverUtils;
+    private final SolverState solverState;
 
     private boolean DEBUG = false;
 
@@ -78,13 +78,11 @@ public class SudokuSolver {
 
         // assume that the cell already has the updated domain
 
-        for(int value = 1; value <= 9; value++){
+        List<Assignment> assignments = getNextAssignments(board, nextCell);
 
-            // blocked by at least one other position
-            if(nextCell.domain[value] > 0)
-                continue;
+        for(Assignment assignment : assignments){
 
-            nextCell.assign(value);
+            nextCell.assign(assignment.value);
             solverState.incVarAssignments();
 
             solverUtils.updateNeighbours(board, nextCell, "value added");
@@ -98,6 +96,30 @@ public class SudokuSolver {
         nextCell.value = 0;
         solverState.incBacktracks();
         return false;
+    }
+
+    public List<Assignment> getNextAssignments(Cell[][] board, Cell cell){
+
+        List<Assignment> nextAssignments = new LinkedList<Assignment>();
+
+        for(int value = 1; value <= 9; value++){
+
+            // blocked by at least one other position
+            if(cell.domain[value] > 0)
+                continue;
+
+            if(solverState.isLcvEnabled()){
+                nextAssignments.add(new Assignment(value, solverUtils.getNumCollisionsWithNeighbours(board, cell, value)));
+            }else {
+                nextAssignments.add(new Assignment(value, 0));
+            }
+        }
+
+        if(solverState.isLcvEnabled()){
+            solverUtils.sortAssignments(nextAssignments);
+        }
+
+        return nextAssignments;
     }
 
     public Cell getNextCell(Cell[][] board){
