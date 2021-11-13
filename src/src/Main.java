@@ -11,6 +11,7 @@ public class Main {
 
     public static final String indentation = "      ";
     public static final int NEW_LINES_AT_CLEAR = 200;
+    public static final int CONSOLE_WIDTH = 25;
 
     public static void main(String[] args) {
 
@@ -33,6 +34,9 @@ public class Main {
 
     public static void processCommand(String command) {
         switch (command) {
+            case "out":
+                out();
+                break;
             case "clear":
                 clear();
                 break;
@@ -41,6 +45,9 @@ public class Main {
                 break;
             case "load":
                 load();
+                break;
+            case "prefs":
+                printPreferences();
                 break;
             case "print":
                 print();
@@ -57,6 +64,12 @@ public class Main {
             case "quit":
                 running = false;
                 break;
+            case "+MVR":
+                solver.setMVR(true);
+                break;
+            case "-MVR":
+                solver.setMVR(false);
+                break;
             default:
                 System.out.println(indentation + "invalid command. Type 'help' for additional information.");
         }
@@ -66,9 +79,11 @@ public class Main {
         System.out.println(indentation + "clear: clears the console.");
         System.out.println(indentation + "help: prints this message.");
         System.out.println(indentation + "load: loads a sudoku board from a given string in to the solver.");
+        System.out.println(indentation + "out: outputs the solved sudoku as a string.");
+        System.out.println(indentation + "prefs: prints the current preferences. Use +- <pref> to change the preferences.");
         System.out.println(indentation + "print: prints the currently loaded sudoku board.");
         System.out.println(indentation + "show: shows the solution to the previously solved sudoku board.");
-        System.out.println(indentation + "solve: solves the currently loaded sudoku board. Uses the chosen settings.");
+        System.out.println(indentation + "solve: solves the currently loaded sudoku board. Uses the preferences.");
         System.out.println(indentation + "stats: shows statistics concerning the last calculation.");
         System.out.println(indentation + "quit: quits the console.");
     }
@@ -90,6 +105,10 @@ public class Main {
         } catch (RuntimeException e) {
             System.out.println(indentation + e.getMessage());
         }
+    }
+
+    public static void printPreferences(){
+        solver.printPreferences();
     }
 
     public static void solve() {
@@ -120,6 +139,14 @@ public class Main {
     public static void stats(){
         try{
             solver.stats();
+        }catch(RuntimeException e){
+            System.out.println(indentation + e.getMessage());
+        }
+    }
+
+    public static void out(){
+        try{
+            solver.out();
         }catch(RuntimeException e){
             System.out.println(indentation + e.getMessage());
         }

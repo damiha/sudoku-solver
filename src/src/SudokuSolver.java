@@ -1,12 +1,11 @@
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class SudokuSolver {
 
     private Cell[][] board;
     private Cell[][] solution;
+    private BoardUtils boardUtils;
+    private SolverUtils solverUtils;
 
     private boolean sudokuLoaded;
     private boolean solverExecuted;
@@ -14,11 +13,38 @@ public class SudokuSolver {
 
     int numberOfBacktracks;
 
-    private final int CONSOLE_WIDTH = 25;
+    private boolean MVRenabled;
+
+    private PriorityQueue<Cell> mvrOrdering;
+
+    private boolean DEBUG = false;
 
     public SudokuSolver(){
         this.board = new Cell[9][9];
         this.solution = new Cell[9][9];
+
+        this.boardUtils = new BoardUtils();
+        this.solverUtils = new SolverUtils();
+
+        this.mvrOrdering = new PriorityQueue<>(new Comparator<Cell>() {
+            @Override
+            public int compare(Cell o1, Cell o2) {
+
+                int remainingValuesO1 = 0;
+                int remainingValuesO2 = 0;
+
+                for(int i = 0; i < 9; i++){
+                    if(o1.domain[i] == 0){
+                        remainingValuesO1++;
+                    }
+                    if(o2.domain[i] == 0){
+                        remainingValuesO2++;
+                    }
+                }
+
+                return Integer.compare(remainingValuesO1,remainingValuesO2);
+            }
+        });
     }
 
     private void reset(){
@@ -31,161 +57,94 @@ public class SudokuSolver {
 
     public void loadSudokuFromString(String sudokuString){
 
-        if(sudokuString == null || sudokuString.length() != 81 || !isNumeric(sudokuString)){
+        if(sudokuString == null || sudokuString.length() != 81 || !solverUtils.isNumeric(sudokuString)){
             throw new RuntimeException("ERROR: string violates the required format!");
         }
 
         reset();
 
-        for(int col = 0; col < 9; col++) {
-            for (int row = 0; row < 9; row++) {
-                int cellNum = Integer.parseInt(sudokuString.charAt(col * 9 + row) + "");
-                this.board[col][row] = new Cell(cellNum, cellNum > 0);
+        for(int y = 0; y < 9; y++) {
+            for (int x = 0; x < 9; x++) {
+                int cellVal = Integer.parseInt(sudokuString.charAt(y * 9 + x) + "");
+                this.board[y][x] = new Cell(y,x,cellVal);
             }
         }
         this.sudokuLoaded = true;
     }
 
     public void print(){
-        print(board);
-    }
-
-    public void print(Cell[][] board){
 
         checkLoaded();
 
-        for(int lineIndex = 0; lineIndex < 9; lineIndex++){
-            if(lineIndex % 3 == 0){
-                printHLine();
-            }
-            printLine(board, lineIndex);
-        }
-        printHLine();
-    }
-
-    private void printLine(Cell[][] board, int lineIndex){
-        System.out.print(Main.indentation + "| ");
-        for(int i = 0; i < 9; i++){
-            System.out.print(board[lineIndex][i] + " ");
-
-            if((i + 1) % 3 == 0){
-                System.out.print("| ");
-            }
-        }
-        System.out.println();
-    }
-
-    private void printHLine(){
-        System.out.print(Main.indentation);
-        for(int i = 0; i < CONSOLE_WIDTH; i++){
-            System.out.print("-");
-        }
-        System.out.println();
-    }
-
-    private boolean isNumeric(String sudokuString){
-
-        for(char c : sudokuString.toCharArray()){
-            if(!Character.isDigit(c)){
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private void checkLoaded(){
-        if(!sudokuLoaded){
-            throw new RuntimeException("ERROR: no sudoku board is currently loaded into the solver.");
-        }
+        boardUtils.print(board);
     }
 
     public void solve(){
 
         checkLoaded();
 
-        copyBoard(solution, board);
+        boardUtils.copyBoard(solution, board);
+
+        solverUtils.loadDomainIntoEachCell(solution);
+
+        if(MVRenabled){
+            solverUtils.loadCellsIntoOrdering(mvrOrdering, solution);
+        }
 
         solverExecuted = true;
         unsolvable = solve(solution) ? false : true;
     }
 
-    private void copyBoard(Cell[][] dest, Cell[][] src){
-        for(int y = 0; y < 9; y ++){
-            for(int x = 0; x < 9; x++){
-
-                if(dest[y][x] == null){
-                    dest[y][x] = new Cell(0, false);
-                }
-
-                dest[y][x].value = src[y][x].value;
-                dest[y][x].fixed = src[y][x].fixed;
-            }
-        }
-    }
-
     public boolean solve(Cell[][] board){
 
-        // find next empty cell
-        int nextX = 0;
-        int nextY = 0;
-
-        boolean foundEmpty = false;
-
-        outer: for(int y = 0; y < 9; y++){
-            for(int x = 0; x < 9; x++){
-                if(board[y][x].value == 0){
-                    nextX = x;
-                    nextY = y;
-                    foundEmpty = true;
-                    break outer;
-                }
-            }
+        if(DEBUG){
+            boardUtils.print(board);
+            System.out.println();
         }
 
-        if(!foundEmpty){
+        int[] nextPos = findNextPosition(board);
+
+        if(nextPos[0] == -1 && nextPos[1] == -1){
             return true;
         }
 
-        Set<Integer> domain = getDomainAt(board, nextY, nextX);
+        // assume that the cell already has the updated domain
+        Cell currentCell = board[nextPos[0]][nextPos[1]];
 
-        for(Integer domainValue : domain){
-            board[nextY][nextX].value = domainValue;
+        for(int i = 1; i <= 9; i++){
+
+            // blocked by at least one other position
+            if(currentCell.domain[i] > 0)
+                continue;
+
+            currentCell.value = i;
+
+            updateNeighbours(board, currentCell, "value added");
 
             if(solve(board)){
                 return true;
             }
+            updateNeighbours(board, currentCell, "value removed");
         }
         // backtrack
-        board[nextY][nextX].value = 0;
+        currentCell.value = 0;
         this.numberOfBacktracks++;
         return false;
     }
-
-    public void show(){
-
-        checkLoaded();
-
-        if(!solverExecuted){
-            throw new RuntimeException("ERROR: solver has not been executed yet. Type 'solve' first.");
-        }
-        else if(unsolvable){
-            throw new RuntimeException("ERROR: unsolvable board detected.");
-        }
-
-        print(solution);
-    }
-
-    private Set<Integer> getDomainAt(Cell[][] board, int y, int x){
-        Set<Integer> domain = new HashSet<Integer>(List.of(1,2,3,4,5,6,7,8,9));
+    public void updateNeighbours(Cell[][] board, Cell cell, String action){
+        int y = cell.y;
+        int x = cell.x;
+        // collect all neighbours
+        Set<Cell> neighbours = new HashSet<Cell>();
 
         // look across row
         for(int i = 1; i < 9; i++){
-            domain.remove(board[y][(x + i) % 9].value);
+            neighbours.add(board[y][(x + i) % 9]);
         }
 
         // look across column
         for(int i = 1; i < 9; i++){
-            domain.remove(board[(y + i) % 9][x].value);
+            neighbours.add(board[(y + i) % 9][x]);
         }
 
         // look across 3x3 square
@@ -194,18 +153,90 @@ public class SudokuSolver {
 
         for(int i = 0; i < 3; i++){
             for(int j = 0; j < 3; j++){
-                int removeNum = board[ySquare + i][xSquare + j].value;
-                domain.remove(removeNum);
+                Cell neighbour = board[ySquare + i][xSquare + j];
+
+                if(neighbour != cell){
+                    neighbours.add(neighbour);
+                }
             }
         }
+        for(Cell neighbour : neighbours){
+            if(action.equals("value added") && neighbour.domain != null && neighbour.value == 0){
+                neighbour.domain[cell.value]++;
+            }else if(action.equals("value removed") && neighbour.domain != null && neighbour.value == 0){
+                neighbour.domain[cell.value]--;
+            }
+        }
+    }
+    public int[] findNextPosition(Cell[][] board){
+        // {-1,-1} => no cell found
+        int[] nextPos = {-1,-1};
+        if(MVRenabled){
+            Cell nextCell = mvrOrdering.remove();
+            nextPos[0] = nextCell.y;
+            nextPos[1] = nextCell.x;
 
-        return domain;
+        }else {
+
+            outer: for(int y = 0; y < 9; y++){
+                for(int x = 0; x < 9; x++){
+                    if(board[y][x].value == 0){
+                        nextPos[0] = y;
+                        nextPos[1] = x;
+                        break outer;
+                    }
+                }
+            }
+        }
+        return nextPos;
+    }
+
+    public void show(){
+
+        checkLoaded();
+        checkSolved();
+
+        boardUtils.print(solution);
     }
 
     public void stats(){
+        checkSolverExecuted();
+        System.out.println(Main.indentation + "# backtracks: " + numberOfBacktracks);
+    }
+
+    public void printPreferences(){
+        System.out.println(Main.indentation + "MVR: " + MVRenabled);
+    }
+
+    public void out(){
+        checkLoaded();
+        checkSolved();
+
+        System.out.println(Main.indentation + "output: " + solverUtils.getSudokuString(solution));
+    }
+
+    public void setMVR(boolean value){
+        MVRenabled = value;
+    }
+
+    private void checkLoaded(){
+        if(!sudokuLoaded){
+            throw new RuntimeException("ERROR: no sudoku board is currently loaded into the solver.");
+        }
+    }
+
+    private void checkSolverExecuted(){
         if(!solverExecuted){
             throw new RuntimeException("ERROR: solver has not been executed yet. Type 'solve' first.");
         }
-        System.out.println(Main.indentation + "# backtracks: " + numberOfBacktracks);
+    }
+
+    private void checkSolved(){
+
+        checkSolverExecuted();
+
+        if(unsolvable){
+            throw new RuntimeException("ERROR: unsolvable board detected.");
+        }
     }
 }
