@@ -14,4 +14,6 @@ A small console application written in Java that solves 9x9 sudokus using backtr
 - **MVR**       = Minimum Values Remaining, the sudoku cell with the least possible assigments gets tried first.
 - **LCV**       = Least Constraining Value, the value that constrains adjacent cells the least gets tried first.
 
- 	![alt text](/images/15-puzzle-pages.png)
+![alt text](console read.png)
+![alt text](console solve no heuristics.png)
+![alt text](console solve heuristics.png)
