@@ -10,15 +10,11 @@ public class SolverState {
 
     /* stats */
     private int numberOfBacktracks;
-    private int numberOfVarAssigments;
+    private int numberOfVarAssignments;
     private long executionTime;
 
     /* helper variables */
     private long startTime, endTime;
-
-    public SolverState(){
-
-    }
 
     public void setLoaded(){
         sudokuLoaded = true;
@@ -47,7 +43,7 @@ public class SolverState {
     }
 
     public void incVarAssignments(){
-        numberOfVarAssigments++;
+        numberOfVarAssignments++;
     }
 
     public boolean isMvrEnabled(){
@@ -89,7 +85,7 @@ public class SolverState {
 
     public void resetStats(){
         numberOfBacktracks = 0;
-        numberOfVarAssigments = 0;
+        numberOfVarAssignments = 0;
         executionTime = 0;
     }
 
@@ -97,7 +93,7 @@ public class SolverState {
     public void printStats(){
 
         System.out.println(Main.indentation + "# backtracks: " + numberOfBacktracks);
-        System.out.println(Main.indentation + "# var assigments: " + numberOfVarAssigments);
+        System.out.println(Main.indentation + "# var assigments: " + numberOfVarAssignments);
         System.out.println(Main.indentation + "# execution time(ms): " + executionTime);
     }
 

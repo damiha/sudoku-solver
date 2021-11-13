@@ -10,8 +10,6 @@ public class SudokuSolver {
     private final SolverUtils solverUtils;
     private final SolverState solverState;
 
-    private boolean DEBUG = false;
-
     public SudokuSolver(){
 
         this.board = new Cell[9][9];
@@ -56,7 +54,7 @@ public class SudokuSolver {
 
         solverState.startTimer();
 
-        solverUtils.setDomainAtEachCell(solution);
+        solverUtils.setDomainAndNeighboursAtEachCell(solution);
 
         solverState.setSolverExecuted();
         solverState.setSolvable(solve(solution));
@@ -65,10 +63,6 @@ public class SudokuSolver {
     }
 
     public boolean solve(Cell[][] board){
-
-        if(DEBUG){
-            boardUtils.print(board);
-        }
 
         Cell nextCell = getNextCell(board);
 

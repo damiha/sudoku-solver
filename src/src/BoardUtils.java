@@ -30,12 +30,4 @@ public class BoardUtils {
         }
         System.out.println();
     }
-
-    public void resetBoard(Cell[][] board){
-        for(int y = 0; y < 9; y++) {
-            for (int x = 0; x < 9; x++) {
-                board[y][x] = null;
-            }
-        }
-    }
 }
