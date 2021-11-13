@@ -1,6 +1,3 @@
-import javax.management.RuntimeMBeanException;
-import java.io.IOException;
-import java.security.spec.RSAOtherPrimeInfo;
 import java.util.Scanner;
 
 public class Main {
@@ -65,10 +62,10 @@ public class Main {
                 running = false;
                 break;
             case "+MVR":
-                solver.setMVR(true);
+                solver.getState().setMVR(true);
                 break;
             case "-MVR":
-                solver.setMVR(false);
+                solver.getState().setMVR(false);
                 break;
             default:
                 System.out.println(indentation + "invalid command. Type 'help' for additional information.");
@@ -108,7 +105,7 @@ public class Main {
     }
 
     public static void printPreferences(){
-        solver.printPreferences();
+        solver.getState().printPreferences();
     }
 
     public static void solve() {
@@ -138,7 +135,7 @@ public class Main {
 
     public static void stats(){
         try{
-            solver.stats();
+            solver.getState().printStats();
         }catch(RuntimeException e){
             System.out.println(indentation + e.getMessage());
         }

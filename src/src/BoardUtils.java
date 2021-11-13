@@ -31,18 +31,10 @@ public class BoardUtils {
         System.out.println();
     }
 
-    public void copyBoard(Cell[][] dest, Cell[][] src){
-        for(int y = 0; y < 9; y ++){
-            for(int x = 0; x < 9; x++){
-
-                if(dest[y][x] == null){
-                    dest[y][x] = new Cell(0, 0, 0);
-                }
-
-                dest[y][x].y = src[y][x].y;
-                dest[y][x].x = src[y][x].x;
-                dest[y][x].value = src[y][x].value;
-                dest[y][x].fixed = src[y][x].fixed;
+    public void resetBoard(Cell[][] board){
+        for(int y = 0; y < 9; y++) {
+            for (int x = 0; x < 9; x++) {
+                board[y][x] = null;
             }
         }
     }
